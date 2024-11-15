@@ -15,19 +15,34 @@ const app = express();
 // Middleware
 app.use(express.json());
 app.use(cookieParser());
-app.use(express.urlencoded({ extended: true })); // `true` allows parsing complex objects
+app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
+
+// CORS configuration
+const allowedOrigins = [
+  "http://localhost:3000", // Local development
+  "https://car-management-application-5.onrender.com", // Replace with your deployed frontend URL
+];
 app.use(
   cors({
-    origin: ["http://localhost:3000"], // Update if deploying to production
+    origin: allowedOrigins,
     credentials: true,
   })
 );
 
-// Serve static files
+// Serve static files (uploads)
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// Routes Middleware
+// Serve frontend build files (for fullstack deployment)
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static(path.join(__dirname, "frontend", "build")));
+
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(__dirname, "frontend", "build", "index.html"));
+  });
+}
+
+// API Routes
 app.use("/api/users", userRoute);
 app.use("/api/products", productRoute);
 app.use("/api/contactus", contactRoute);
@@ -40,12 +55,12 @@ app.get("/", (req, res) => {
 // Error Middleware
 app.use(errorHandler);
 
-// Connect to Database and Start Server
+// Database connection and server startup
 const PORT = process.env.PORT || 5000;
 
 if (!process.env.MONGO_URI) {
   console.error("Error: MONGO_URI is not defined in the environment variables.");
-  process.exit(1); // Exit if MONGO_URI is missing
+  process.exit(1);
 }
 
 mongoose
@@ -55,11 +70,11 @@ mongoose
   })
   .then(() => {
     console.log("Connected to MongoDB");
-    app.listen(PORT, () => {
-      console.log(`Server Running on port ${PORT}`);
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log(`Server running on http://0.0.0.0:${PORT}`);
     });
   })
   .catch((err) => {
     console.error(`Error connecting to MongoDB: ${err.message}`);
-    process.exit(1); // Exit if connection fails
+    process.exit(1);
   });
