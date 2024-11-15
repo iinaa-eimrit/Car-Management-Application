@@ -21,6 +21,7 @@ app.use(bodyParser.json());
 // CORS configuration
 const allowedOrigins = [
   "https://car-management-application-phi.vercel.app/", // Replace with your deployed frontend URL
+  "https://http://localhost:3000/", // local frontend URL
 ];
 app.use(
   cors({

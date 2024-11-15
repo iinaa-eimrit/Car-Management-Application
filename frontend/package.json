@@ -50,6 +50,5 @@
   },
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11"
-  },
-  "proxy": "https://car-management-application-4.onrender.com"
+  }
 }
