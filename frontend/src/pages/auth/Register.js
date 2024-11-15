@@ -20,44 +20,73 @@ const Register = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
-  const [formData, setformData] = useState(initialState);
+  const [formData, setFormData] = useState(initialState);
   const { name, email, password, password2 } = formData;
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setformData({ ...formData, [name]: value });
+    setFormData({ ...formData, [name]: value });
+  };
+
+  const validateForm = () => {
+    // Basic validation
+    if (!name || !email || !password || !password2) {
+      toast.error("All fields are required");
+      return false;
+    }
+    if (name.length < 2) {
+      toast.error("Name must be at least 2 characters");
+      return false;
+    }
+    if (password.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return false;
+    }
+    if (!validateEmail(email)) {
+      toast.error("Please enter a valid email");
+      return false;
+    }
+    if (password !== password2) {
+      toast.error("Passwords do not match");
+      return false;
+    }
+    return true;
   };
 
   const register = async (e) => {
     e.preventDefault();
 
-    if (!name || !email || !password) {
-      return toast.error("All fields are required");
-    }
-    if (password.length < 6) {
-      return toast.error("Passwords must be up to 6 characters");
-    }
-    if (!validateEmail(email)) {
-      return toast.error("Please enter a valid email");
-    }
-    if (password !== password2) {
-      return toast.error("Passwords do not match");
+    if (!validateForm()) {
+      return;
     }
 
     const userData = {
-      name,
-      email,
+      name: name.trim(),
+      email: email.trim().toLowerCase(),
       password,
     };
+
     setIsLoading(true);
     try {
       const data = await registerUser(userData);
-      // console.log(data);
-      await dispatch(SET_LOGIN(true));
-      await dispatch(SET_NAME(data.name));
-      navigate("/dashboard");
-      setIsLoading(false);
+      
+      if (data) {
+        // Update Redux store
+        dispatch(SET_LOGIN(true));
+        dispatch(SET_NAME(data.name));
+        
+        // Clear form
+        setFormData(initialState);
+        
+        // Redirect to dashboard
+        navigate("/dashboard");
+        
+        // Success message is already shown by the service
+      }
     } catch (error) {
+      // Error toast is already shown by the service
+      console.error("Registration error:", error);
+    } finally {
       setIsLoading(false);
     }
   };
@@ -80,6 +109,9 @@ const Register = () => {
               name="name"
               value={name}
               onChange={handleInputChange}
+              minLength={2}
+              className={styles.input}
+              disabled={isLoading}
             />
             <input
               type="email"
@@ -88,6 +120,8 @@ const Register = () => {
               name="email"
               value={email}
               onChange={handleInputChange}
+              className={styles.input}
+              disabled={isLoading}
             />
             <input
               type="password"
@@ -96,6 +130,9 @@ const Register = () => {
               name="password"
               value={password}
               onChange={handleInputChange}
+              minLength={6}
+              className={styles.input}
+              disabled={isLoading}
             />
             <input
               type="password"
@@ -104,17 +141,28 @@ const Register = () => {
               name="password2"
               value={password2}
               onChange={handleInputChange}
+              minLength={6}
+              className={styles.input}
+              disabled={isLoading}
             />
-            <button type="submit" className="--btn --btn-primary --btn-block">
-              Register
+            <button 
+              type="submit" 
+              className="--btn --btn-primary --btn-block"
+              disabled={isLoading}
+            >
+              {isLoading ? "Registering..." : "Register"}
             </button>
           </form>
 
-          <span className={styles.register}>
-            <Link to="/">Home</Link>
-            <p> &nbsp; Already have an account? &nbsp;</p>
-            <Link to="/login">Login</Link>
-          </span>
+          <div className={styles.register}>
+            <Link to="/" className={styles.link}>
+              Home
+            </Link>
+            <p className={styles.text}>&nbsp; Already have an account? &nbsp;</p>
+            <Link to="/login" className={styles.link}>
+              Login
+            </Link>
+          </div>
         </div>
       </Card>
     </div>
